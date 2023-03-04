@@ -1,0 +1,26 @@
+=====================================================TEMA2===================================================
+
+Aplicatia ruleaza pe doua nivele folosindu-se de doua thread-pooluri diferite, avand nr-ul de threaduri care
+ruleaza in paralel, fixat(parametru primit la rulare).
+
+(***)Primului thread pool ii sunt "submitate" task-uri de tipul GetOrderTask.
+->metoda run(suprascrisa in GetOrderTask) citeste o singura linie din fisierul de comenzi si daca aceasta este 
+diferita de null, submiteaza alt task workPool-ului.(astfel, se consuma tot fisierul,fiecare linie reprezentand
+un task nou preluat de unul din threadurile disponibile)
+	Obs: Deoarece threadurile utilizeaza aceleasi BufferedReader, linia la care ma aflu in fisier este
+retinuta si am garantia ca un task(o linie cu o comanda) n-o sa fie submitat de doua ori. 
+
+
+
+(***)Celui de-al doilea workPool ii sunt "submitate" task-uri de tipul GetProductsTask
+ Se descompune linia unei anumite comenzi in tokene, si se "submiteaza", workPool-ului de nivel 2 atatea taskuri
+cate produse are respectiva comanda. WorkPool-ul de nivel 2 este comun pentru lucratorii de nivel 2, deci
+am garantia ca la un moment dat nu am mai mult de x(parametru citit) threaduri care lucreaza simultan, cat si 
+fapul ca acestea sunt folosite eficient(de ex daca o comanda are 3 produse, iar workPoolul are 5 threaduri, se
+vor rezolva aceste 3 tasku-uri cat si alte 2 task-uri pt o alta comanda).
+->metoda run(suprascrisa in GetProductsTask) citeste linie cu linie din fisierul cu produse pana gaseste
+PRIMUL produs care apartine comenzii, moment in care si-a indeplinit scopul. Threadul v-a adauga acest produs gasit
+intr-o lista sincrona(actiune dummy = simbol ca "shipuieste" produsul)
+
+Actiunile de scriere in fisier se fac dupa o verificare-> o comanda se considera "shipped" doar daca lista de 
+produse "shipped" are atatea produse cate are in orders.txt. 
